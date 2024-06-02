@@ -1,0 +1,244 @@
+Comenzi configurare echipamente:
+
+Router>en
+Router#conf term  --nivelul necesar pentru diferite setari
+Router#hostname Router  --adaug numele echipamentului la configurare
+Router(config)#no ip domain-lookup  -- disable translatarea domain in ip (prevent the router from trying to resolve incorrectly pasted commands);
+Router(config)#service password-encryption --parolele sunt salvate criptat
+!!!Router(config)#security passwords min-length 10
+!!!Router(config)#login block-for 120 attempts 3 within 60
+Router(config)#enable password cisco54321 -- parola pentru accesul la comenzile din "conf t"
+Router(config)#enable secret cisco12345 --un level mai ridicat de securitate fata de enable pasword (parola criptata)
+Router(config)#banner login #Accesul persoanelor neautorizate interzis!# --mesajul inainte de autentificare
+Router(config)#banner motd #Vineri la ora 16 serverul intra in mentenanta!#  --message-of-the-day mesajul dupa autentificare
+
+Router(config)#line console 0 --parola pe portul de consola
+Router(config-line)#password ciscoconpass
+Router(config-line)#login
+Router(config-line)#logging synchronous -- pentru afisarea mesajelor de logging
+Router(config-line)#exec-timeout 0 0
+
+Router(config-line)#line vty 0 15 --parola pentru telnet
+Router(config-line)#password ciscovtypass
+Router(config-line)#login
+Router(config-line)#logging synchronous
+Router(config-line)#exec-timeout 0 0
+
+
+Router(config)#no cdp run -- cdp protocol de level 2 trimite pachete pentru a isi identifica vecinii;
+
+A(config-if)#description "legatura cu X"
+
+CONFIGURARI STANDARD
+
+en
+conf term 
+hostname Router  
+no ip domain-lookup  
+service password-encryption 
+security passwords min-length 10
+login block-for 120 attempts 3 within 60
+enable password cisco54321 
+enable secret cisco12345 
+banner login #Accesul persoanelor neautorizate interzis!# 
+banner motd #Vineri la ora 16 serverul intra in mentenanta!#  
+
+line console 0 
+password ciscoconpass
+login
+logging synchronous 
+exec-timeout 0 0
+
+line vty 0 15
+password ciscovtypass
+login
+logging synchronous
+exec-timeout 0 0
+
+no cdp run
+
+A(config-if)#description "legatura cu X"
+
+CONFIGURARI ROUTERS
+
+RIP
+enable
+configure terminal
+route rip
+version 2 
+no auto-summary
+network 10.0.0.0
+network 192.168.0.0
+do wr
+
+EIGRP - wild card opusul mastii - unde ai in masca 1 pui 0
+enable
+configure terminal 
+router eigrp 10
+network 10.0.0.28 0.0.0.3
+network 10.0.0.60 0.0.0.3
+network 192.168.0.28 0.0.0.3
+do wr
+
+
+OSPF
+enable
+configure terminal
+router ospf 10
+network 18.10.0.32 0.0.0.3 area 1
+network 18.10.0.40 0.0.0.3 area 1
+network 18.10.0.52 0.0.0.3 area 1
+do write
+
+router eigrp 10
+redistribute ospf 10 metric 10000 100 255 2 1500
+so write 
+exit
+router ospf 10
+redistribute eigrp 10 metric 100 subnets
+
+REDISTRIBUIRE
+
+OSPF -  EIGRP
+router eigrp 10
+redistribute ospf 10 metric 10000 100 255 2 1500
+do write 
+exit
+router ospf 10
+redistribute eigrp 10 metric 100 subnets
+
+RIP - OSPF
+router eigrp 1
+ redistribute rip metric 10000 0 255 1 1500 
+ network 11.0.17.12 0.0.0.3
+ network 11.0.17.8 0.0.0.3
+ auto-summary
+
+router rip
+ version 2
+ redistribute eigrp 1 metric 1 
+ network 15.0.0.0
+ no auto-summary
+
+
+
+REDISTRIBUIRE
+
+================OSPF<->EIGRP====================
+en
+conf t
+router eigrp 1
+redistribute ospf 1 metric 10000 100 255 1 1500
+
+router ospf 1
+log-adjacency-changes ???
+redistribute eigrp 1 subnets 
+do wr
+ 
+ ================OSPF<->RIPv2====================
+en
+conf t
+router rip
+redistribute ospf 1 metric 5
+
+router ospf 1
+log-adjacency-changes  ???
+redistribute rip subnets 
+do wr
+ =================================================
+
+ComenziRutare EIGRP
+
+en
+conf term
+router eigrp 10
+network 192.168.0.12 0.0.0.3  --- MODIFICĂ (NA device conectat și 255.255.255.255-mască device conectat)
+do wr
+
+ =================================================
+
+en
+conf term
+router ospf 10
+network 192.168.0.12 0.0.0.3 area 0  --- MODIFICĂ (NA device conectat; 255.255.255.255-mască device conectat; aceași arie peste tot în rețea)
+do wr
+
+ =================================================
+
+en
+conf term
+ip route 0.0.0.0 0.0.0.0 gig0/0   ---- RUTĂ DEFAULT (packets from any IP address with any subnet mask get sent to gig0/0)
+======(e gig0/0 pentru că interfața asta duce în buclă, în poză linia roșie)====
+ip route 172.16.0.8 255.255.255.252 gig0/2  --- RUTĂ SPECIFICĂ (NA și Masca device conectat pe ruta specifică)
+======(e gig0/2 pentru că interfața asta duce spre frunză. în poză linia mov)
+do wr
+
+
+
+
+CONFIGURARE VPN
+
+R1_Frontend
+en 
+conf terminal
+interface tunnel 0
+no shutdown
+ip address 4.8.12.17 255.255.255.252
+tunnel source gig0/0
+tunnel destination 4.4.60.66
+tunnel mode gre ip
+
+ip route 4.4.60.72 255.255.255.252 4.8.12.18
+do wr
+
+R1_Backend
+en 
+conf terminal
+interface tunnel 0
+no shutdown
+ip address 4.8.12.18 255.255.255.252
+tunnel source gig0/0
+tunnel destination 80.44.44.2
+tunnel mode gre ip
+
+ip route 80.44.44.8 255.255.255.252 4.8.12.17
+do wr
+2
+
+#R7
+interface tunnel 0
+ip address 84.84.0.1 255.255.255.252 (adresa lui R7 de tunel VPN)
+tunnel source g0/1 (interfata de pe care pleaca spre routerul urmator)
+tunnel destination 11.0.0.5 (adresa ip de pe interfata prin care intra in routerul destinatie)
+tunnel mode gre ip
+no sh
+
+#reteaua se pune doar la ip route...
+ip route 11.0.0.16 255.255.255.252 84.84.0.2 (adresa de retea dintre router+pc/server destinatie, masca, adresa ip de tunel VPN a routerului R1)
+
+#R1
+interface tunnel 0
+ip address 84.84.0.2 255.255.255.252
+tunnel source g0/1
+tunnel destination 15.16.0.74
+tunnel mode gre ip
+no sh
+
+#reteaua se pune doar la ip route...
+ip route 15.16.0.80 255.255.255.252 84.84.0.1
+
+
+ACL-uri
+
+ALL traffic between STORAGE and APPS are permited
+
+ip access-list extended permit-all
+ permit ip host 15.16.17.66 host 15.16.17.78 (ip-urile de la serverele implicate)
+
+RESTRICTION ACCESS - SSH 
+ip access-list extended ssh-restriction
+ permit tcp host 15.16.17.56 15.16.17.64 0.0.0.3 eq 22
+ permit tcp host 15.16.17.56 18.10.17.40 0.0.0.3 eq 22
+ permit tcp host 15.16.17.56 15.16.17.76 0.0.0.3 eq 22
+
+
