@@ -241,6 +241,25 @@ ip access-list extended ssh-restriction
  permit tcp host 15.16.17.56 18.10.17.40 0.0.0.3 eq 22
  permit tcp host 15.16.17.56 15.16.17.76 0.0.0.3 eq 22
 
+
+
+0000 0000.0000 0000.0000 0000.0000 0000
+
+0000 0000.0000 0000.0000 0000.0000 0001
+
+0000 0000.0000 0000.0000 0000.0000 0010
+
+0000 0000.0000 0000.0000 0000.0000 0011
+
+0000 0000.0000 0000.0000 0000.0000 0100
+
+0000 0000.0000 0000.0000 0000.0000 00 101
+
+1. cate device-uri ai in total in subnetwork : 5
+2. adaugi 2 => 7
+3. de cati biti ai nevoie ca sa scrii 7 ip-uri? => cel mai mic multiplu de 2 >= 7 => 7 < 8 => 7 < 2^3 => 3 biti (care se swchimba din cei 32)
+4. cati sunt in masca? => cati biti raman pe loc => 32 - 3 = 29
+
 MASK - WILDCARD
 /32	255.255.255.255	0.0.0.0
 /31	255.255.255.254	0.0.0.1
