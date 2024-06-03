@@ -277,3 +277,7 @@ MASK - WILDCARD                   ADDRESSES     HOSTS
 
 Wireless -> Wireless sercurity in Gui of server to modify security mode an server address + pass.
 For laptop interface -> Physical ->close laptop on button -> Delete de port -> add 
+
+Restrict Guest2
+Config-> MAC ADDRESS: 00:E0:F7:52:80:8B -> Wireless Mac Filter ->Enable -> add MAC ADDRESS
+
