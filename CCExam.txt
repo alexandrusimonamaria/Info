@@ -275,4 +275,5 @@ MASK - WILDCARD                   ADDRESSES     HOSTS
 /21	255.255.248.0	0.0.7.255
 /20	255.255.240.0	0.0.15.255
 
-
+Wireless -> Wireless sercurity in Gui of server to modify security mode an server address + pass.
+For laptop interface -> Physical ->close laptop on button -> Delete de port -> add 
