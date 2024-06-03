@@ -281,3 +281,81 @@ For laptop interface -> Physical ->close laptop on button -> Delete de port -> a
 Restrict Guest2
 Config-> MAC ADDRESS: 00:E0:F7:52:80:8B -> Wireless Mac Filter ->Enable -> add MAC ADDRESS
 
+=========================================================
+IV) VPN
+R1
+en 
+conf t
+interface tunnel 0
+ip add 84.84.0.1 255.255.255.252
+no sh
+tunnel source gig0/1
+tunnel destination 15.16.0.74
+tunnel mode gre ip
+ip route 15.16.0.80 255.255.255.252 84.84.0.2
+do wr
+
+R7
+en 
+conf t
+interface tunnel 0
+ip add 84.84.0.2 255.255.255.252
+no sh
+tunnel source gig0/1
+tunnel destination 11.0.0.5
+tunnel mode gre ip
+ip route 11.0.0.16 255.255.255.252 84.84.0.1
+do wr
+=========================================================
+VI) ACL
+c) The HomePC(15.16.0.82) will be restricted to access AAA_Server network (18.10.0.52)
+
+R8
+en
+conf t
+ip access-list extended HOMEPC_AAA
+ deny ip host 15.16.0.82 18.10.0.52 0.0.0.3
+ permit ip any any
+ 
+ interface GigabitEthernet0/0
+ ip access-group HOMEPC_AAA in
+  interface GigabitEthernet0/1
+ ip access-group HOMEPC_AAA in
+do wr
+
+b) Only the WorkPC(11.0.0.18) can establish a ssh connection to the servers
+##On each interface to the Servers
+##example on STORAGE (replace 80 with 22; server don't have ssh service for testing)
+
+R10
+en
+conf t
+ip access-list extended WORKPC_SSH
+ permit tcp host 11.0.0.18 host 18.10.0.58 eq 80
+ deny tcp any any eq 80
+ permit ip any any
+ 
+ interface GigabitEthernet0/2
+ ip access-group WORKPC_SSH out
+do wr 
+
+c) All web traffic between STORAGE(18.10.0.58) and APPS(11.0.0.22) are permitted;
+##On each interface to the Servers
+##example on APPS
+
+en
+conf t
+ip access-list extended STORAGE_APPS
+ permit tcp host 18.10.0.58 host 11.0.0.22 eq www
+ deny tcp any any eq www
+ permit ip any any
+ 
+ interface GigabitEthernet0/2
+ ip access-group STORAGE_APPS out
+do wr 
+
+
+=========================================================
+
+
+
